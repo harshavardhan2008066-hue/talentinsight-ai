@@ -10,7 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Initialize the Gemini Client
-client = genai.Client(api_key="AIzaSyDO0B63TpHBNfG3nwmYwBqVzTq7EfWr5Ng")
+client = genai.Client(api_key=str.secrets["GEMINI_API_KEY"])
 
 # UPGRADED FILE HANDLER: Extract raw text safely from both PDFs and TXT documents
 def extract_text_from_file(uploaded_file):
