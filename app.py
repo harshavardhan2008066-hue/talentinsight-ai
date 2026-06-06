@@ -40,7 +40,6 @@ def extract_text_from_file(uploaded_file):
     return None
 
 # PDF Creator Engine
-# Phase 3 Helper: Convert Markdown analysis text into a clean PDF export file stream safely
 def generate_report_pdf(candidate_name, score, report_text):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
@@ -52,24 +51,20 @@ def generate_report_pdf(candidate_name, score, report_text):
     body_style = ParagraphStyle('DocBody', parent=styles['Normal'], fontSize=10, leading=15, spaceAfter=8)
     heading_style = ParagraphStyle('DocHeading', parent=styles['Heading3'], fontSize=12, spaceBefore=10, spaceAfter=6, textColor='#1a1f2c')
     
-    # Document Header Elements
     story.append(Paragraph("TalentInsight AI - Recruitment Match Analysis", title_style))
     story.append(Paragraph(f"<b>Candidate:</b> {candidate_name}<br/><b>Overall Match Score:</b> {score}%<br/>", meta_style))
     story.append(Spacer(1, 10))
     
-    # Split text by lines and parse clean structural elements safely
     lines = report_text.split('\n')
     for line in lines:
         cleaned = line.strip()
         if not cleaned:
             continue
             
-        # Clean up headers cleanly without leaving tags unclosed
         if cleaned.startswith("## ") or cleaned.startswith("### "):
             header_text = cleaned.lstrip("# ").replace("**", "")
             story.append(Paragraph(f"<b>{header_text}</b>", heading_style))
         else:
-            # Safely handle standard bold markers and bullet points
             para_text = cleaned.replace("**", "")
             if para_text.startswith("* ") or para_text.startswith("- "):
                 para_text = "• " + para_text[2:]
@@ -82,29 +77,40 @@ def generate_report_pdf(candidate_name, score, report_text):
 # Page Setup Layout 
 str.set_page_config(page_title="TalentInsight AI Pro", page_icon="🎯", layout="wide")
 
-# Custom Premium Styling Themes
+# --- THEME AGNOSTIC PREMIUM STYLING ---
+# Using native Streamlit theme variables (--text-color, --secondary-background-color) 
+# ensures components cleanly adapt dynamically to Light/Dark modes.
 str.markdown("""
     <style>
-    .main { background-color: #0f1116; }
-    h1, h2, h3 { color: #ffffff !important; font-family: 'Inter', sans-serif; }
     .custom-card {
-        background-color: #1a1f2c;
+        background-color: var(--secondary-background-color);
         padding: 24px;
         border-radius: 12px;
-        border: 1px solid #2d3748;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
+        color: var(--text-color);
     }
     .success-banner {
         background: linear-gradient(90deg, #10b981, #059669);
-        color: white;
+        color: white !important;
         padding: 12px;
         border-radius: 8px;
         font-weight: bold;
         text-align: center;
         margin-bottom: 15px;
     }
-    .leaderboard-headline { color: #10b981 !important; font-weight: bold; }
+    .leaderboard-headline { 
+        color: #10b981 !important; 
+        font-weight: bold; 
+        margin-top: 0px;
+    }
+    .metric-card-header {
+        background-color: var(--secondary-background-color); 
+        padding: 20px; 
+        border-radius: 12px; 
+        margin-top: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -134,14 +140,12 @@ with col1:
         placeholder="Paste core tech stack requirements..."
     )
     
-    # Accepts both PDF and TXT extensions seamlessly
     resume_files = str.file_uploader(
         "Upload Candidate Profiles (PDF or TXT Allowed):", 
         type=["pdf", "txt"], 
         accept_multiple_files=True
     )
     
-    # FIXED: Changed use_container_width=True to width="stretch" to completely stop terminal warning alerts
     run_analysis = str.button("⚡ Run Batch Evaluation", type="primary", width="stretch")
     str.markdown('</div>', unsafe_allow_html=True)
 
@@ -219,7 +223,7 @@ The candidate shows clean core programming competency matching target developer 
                             local_reports[filename] = (65, f"## SCORE: 65%\n\nAPI processing encountered a brief rate pause limit on {filename}. Report fallback generated successfully.")
                 
                 progress_bar.progress((index + 1) / len(resume_files))
-                time.sleep(5)  # Spacing delay to maintain API compliance
+                time.sleep(5)
             
             status_text.empty()
             progress_bar.empty()
@@ -234,7 +238,6 @@ The candidate shows clean core programming competency matching target developer 
         
         str.markdown('<div class="custom-card">', unsafe_allow_html=True)
         str.markdown("<h3 class='leaderboard-headline'>🏆 Candidate Matching Leaderboard</h3>", unsafe_allow_html=True)
-        # FIXED: Replaced use_container_width=True with width="stretch" to eliminate console warnings
         str.dataframe(df, width="stretch")
         str.markdown('</div>', unsafe_allow_html=True)
         
@@ -246,10 +249,11 @@ The candidate shows clean core programming competency matching target developer 
             
             metric_color = "#ea580c" if score < 50 else "#ca8a04" if score < 80 else "#16a34a"
             
+            # Replaced hardcoded text coloring with native Streamlit variable adjustments
             str.markdown(f"""
-                <div style="background-color: #1a1f2c; padding: 20px; border-radius: 12px; border-left: 6px solid {metric_color}; margin-top: 10px;">
+                <div class="metric-card-header" style="border-left: 6px solid {metric_color};">
                     <span style="color: #a0aec0; font-size: 13px; font-weight: bold; letter-spacing: 1px;">METRIC ALIGNMENT BAR</span>
-                    <h2 style="margin: 2px 0 10px 0; color: white;">{selected_candidate}</h2>
+                    <h2 style="margin: 2px 0 10px 0;">{selected_candidate}</h2>
                 </div>
             """, unsafe_allow_html=True)
             
